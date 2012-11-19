@@ -1,0 +1,3 @@
+这里是libpcap的安装目录,einstall是与平台相关的部分，install是与平台无关的部分。（具体情况请查阅libpcap的文档）
+
+ljac用到了install/include/中的libpcap的头文件和einstall/lib/中的libpcap的链接库。
