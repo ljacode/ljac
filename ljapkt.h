@@ -32,10 +32,20 @@ typedef enum{
  */
 typedef enum{
 	TRAN_INVALID,
-	TCP ,  //!TCP  
-	UDP ,  //!UDP
+	TCP ,  //!TCP  0x06
+	UDP ,  //!UDP  0x11
 	TRAN_MAX
 }tran_procol;
+
+/**
+ * @brief 应用层协议类型
+ */
+typedef enum{
+	APP_INVALID,
+	HTTP ,        //!HTTP
+	APP_UNKNOWN,  //!未知的应用层协议
+	APP_MAX
+}app_procol;
 
 /**
  * @brief 数据链路层头
@@ -70,7 +80,7 @@ typedef struct{
 #endif
 
 	u_int8  tos;      //!服务类型（type of service)
-	u_int16 tot_len;  //!IP报文长度
+	u_int16 tot_len;  //!IP报文长度,计数单位为1byte
 	u_int16 id;       //!IP报文id(identification)
 	u_int16 frag_off; //!分片的偏移，以4byte为单位标志位，前三位是标志位[保留] [是否分片] [是否最后一个分片]
 	u_int8  ttl;      //!ttl
@@ -85,7 +95,37 @@ typedef struct{
  * @brief TCP报头
  */
 typedef struct{
-	u_int16 source;  
+	u_int16 source;   //!源端口
+	u_int16 dest;     //!目的端口
+	u_int32 seq;      //!TCP报文中第一个序列号
+	u_int32 ack_seq;  //!确认序列号,ack_seq之前的数据已经被接收
+#if   defined(LJA_BIG_ENDIAN)
+	u_int16 doff:4;   //!TCP报头长度，计数单位是4byte，也是TCP数据部分相对报头开始出的偏移
+	u_int16 res1:4;   //!保留标志位
+	u_int16 cwr:1;    //!通知接收端已经收到了设置ECE标志的ACK
+	u_int16 ece:1;    //!
+	u_int16 urg:1;    //!是否有紧急指针
+	u_int16 ack:1;    //!是否确认序列号
+	u_int16 psh:1;    //!是否直接推送到应用程序
+	u_int16 rst:1;    //!是否重建连接
+	u_int16 syn:1;    //!建立连接
+	u_int16 fin:1;    //!终止连接
+#elif defined(LJA_LITTLE_ENDIAN)
+	u_int16 res1:4;   //!保留标志位
+	u_int16 doff:4;   //!TCP报头长度，计数单位是4byte，也是TCP数据部分相对报头开始出的偏移
+	u_int16 fin:1;    //!终止连接
+	u_int16 syn:1;    //!建立连接
+	u_int16 rst:1;    //!是否重建连接
+	u_int16 psh:1;    //!是否直接推送到应用程序
+	u_int16 ack:1;    //!是否确认序列号
+	u_int16 urg:1;    //!是否有紧急指针
+	u_int16 ece:1;    //!
+	u_int16 cwr:1;    //!通知接收端已经收到了设置ECE标志的ACK
+#endif
+	u_int16 window;   //!发送方的窗口大小,8bit为单位
+	u_int16 check;    //!校验码
+	u_int16 urg_ptr;  //!紧急指针,紧临着紧急数据的第一个非紧急数据相对于序列号的正偏移
+	u_char option[0]; //!options
 }tcp_hdr;
 
 /**
@@ -107,6 +147,14 @@ typedef struct{
 }tran_info;
 
 /**
+ * @brief 从传输层解析出的应用层信息
+ */
+typedef struct{
+	u_char *data;       //!应用层开始的数据
+	tran_procol type;   //!应用层协议类型
+	u_int16 size;       //!应用层数据大小
+}app_info;
+/**
  * @brief 打印mac地址。(实际就是打印mac处的6个字节)
  *
  * @param mac
@@ -126,6 +174,13 @@ void display_ipv4_hdr(ipv4_hdr *hdr);
  * @param addr ipv4地址指针
  */
 void display_ipv4_addr(u_int32 *addr);
+
+/**
+ * @brief 打印tcp报头信息
+ *
+ * @param hdr tcp_hdr*
+ */
+void display_tcp_hdr(tcp_hdr *hdr);
 
 /**
  * @brief 解析链路层数据包。
@@ -163,5 +218,21 @@ void parse_ieee_8022_8023(u_int16 size, u_char *data, net_info *info/**<[out] �
  */
 void parse_ipv4(u_int16 size, u_char *data, tran_info *info/**<[out] 解析出报文的传输层信息*/);
 
+/**
+ * @brief 解析传输层数据
+ *
+ * @param traninfo 传入的传输层信息
+ * @param appinfo  传出的应用层信息
+ */
+void parse_tran(tran_info *traninfo/**<[in] 传输层报文信息*/, app_info *appinfo/**<[out] 解析出的应用层报文信息*/);
+
+/**
+ * @brief 解析传输层tcp数据
+ *
+ * @param size 传输层tcp数据包的大小 
+ * @param data 传输层tcp数据包的开始位置
+ * @param info 从传输层tcp数据包中解析出的应用层信息
+ */
+void parse_tcp(u_int16 size, u_char *data, app_info *info);
 
 #endif

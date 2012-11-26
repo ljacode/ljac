@@ -59,7 +59,7 @@ void  display_dev(pcap_if_t *dev)
 void display_pcap_pkthdr(struct pcap_pkthdr *hdr)
 {
 	assert(hdr != NULL);
-	printf("%ld.%ld: %u of %u\n",hdr->ts.tv_sec,hdr->ts.tv_usec,hdr->caplen,hdr->len);
+	printf("%ld.%ld: %u of %u",hdr->ts.tv_sec,hdr->ts.tv_usec,hdr->caplen,hdr->len);
 	return ;
 }
 
@@ -78,7 +78,6 @@ void display_pcap_data(struct pcap_pkthdr *hdr, const u_char *data)
 	{
 		printf("%.2x",data[i]);
 	}
-	printf("\n");
 	return ;
 }
 

@@ -63,56 +63,56 @@ void parse_data_linker(u_int16 size, u_char *data, net_info *info/**<[out] ½âÎö³
 	switch (htons(hdr->type))
 	{
 		case 0x0800 :  //IPv4
-			printf("[IPv4]");
+			printf("\n[IPv4]\t");
 			info->data = data+14;
 			info->type = IPV4;
 			info->size = size - 18;  //6+6+2+4(dmac+smac+type+CRC)
 			break;
 		case 0x0806 :  //ARP
-			printf("[ARP]");
+			printf("\n[ARP]\t");
 			info->data = data+14;
 			info->type = ARP;
 			info->size = size - 18;  //6+6+2+4(dmac+smac+type+CRC)
 			break;
 		case 0x8035 :  //RAPP
-			printf("[RARP]");
+			printf("\n[RARP]\t");
 			info->data = data+14;
 			info->type = RARP;
 			info->size = size - 18;  //6+6+2+4(dmac+smac+type+CRC)
 			break;
 		case 0x86DD :  //IPv6
-			printf("[IPv6]");
+			printf("\n[IPv6]\t");
 			info->data = data+14;
 			info->type = IPV6;
 			info->size = size - 18;  //6+6+2+4(dmac+smac+type+CRC)
 			break;
 		case 0x8847 :  //MPLS Label
-			printf("[MPLS]");
+			printf("\n[MPLS]\t");
 			info->data = data+14;
 			info->type = MPLS;
 			info->size = size - 18;  //6+6+2+4(dmac+smac+type+CRC)
 			break;
 		case 0x8863 :  //PPPoe - Discovery
-			printf("[PPPoe]");
+			printf("\n[PPPoe]\t");
 			info->data = data+14;
 			info->type = PPPOED;
 			info->size = size - 18;  //6+6+2+4(dmac+smac+type+CRC)
 			break;
 		case 0x8864 :  //PPPoe - Session
-			printf("[PPPoe]");
+			printf("\n[PPPoe]\t");
 			info->data = data+14;
 			info->type = PPPOES;
 			info->size = size - 18;  //6+6+2+4(dmac+smac+type+CRC)
 			break;
 		case 0x8100 :  //802.1Q tag
-			printf("[802.1Q]");
+			printf("\n[802.1Q]\t");
 			info->data = data+14;
 			info->type = p8021Q;
 			info->size = size - 18;  //6+6+2+4(dmac+smac+type+CRC)
 			break;
 		default :      //IEEE802.2/802.3 rfc1084
-			//TODO 
-			printf("[IEEE802.2/802.3]");
+			//TODO
+			printf("\n[IEEE802.2/802.3]\t");
 			parse_ieee_8022_8023(hdr->type,data+14,info);
 			break;
 	}
@@ -210,9 +210,63 @@ void parse_ipv4(u_int16 size, u_char *data, tran_info *info/**<[out] ½âÎö³ö±¨ÎÄµ
 
 	ipv4_hdr *hdr=(ipv4_hdr *)data;
 	display_ipv4_hdr(hdr);
-	//TODO ¼ÌĞø½âÎö£¬Ìî³ätran_info
+
+	info->data = NULL;
+	info->size = 0;
+	info->type = TRAN_INVALID;
+
+	info->data = data + (hdr->ihl)*4;
+	info->size = hdr->tot_len - (hdr->ihl)*4; //¼õÈ¥Í·²¿µÄ´óĞ¡
+
+	//TODO ×Ü¹ıÓĞ141ÖÖ£¨0-140£©,ÒÔºó¸ù¾İĞèÒªÖğ½¥Ìí¼Ó°É 
+	switch (hdr->procol)
+	{
+		case 0x06 :    //TCP
+			info->type = TCP;
+			printf("\n[TCP]\t");
+			break;
+		case 0x11 :    //UDP
+			info->type = UDP;
+			printf("\n[UDP]\t");
+			break;
+		default :
+			printf("\n[UNKNOWN]\t");
+			info->type = TRAN_INVALID;
+			break;
+	}
 	
 	return ;
+}
+
+/**
+ * @brief ´òÓ¡tcp±¨Í·ĞÅÏ¢
+ *
+ * @param hdr tcp_hdr*
+ */
+void display_tcp_hdr(tcp_hdr *hdr)
+{
+	printf("source %u",hdr->source);
+	printf(" dest %u",hdr->dest);
+	printf(" seq %u",hdr->seq);
+	printf(" ackseq %u",hdr->ack_seq);
+	printf(" doff %u",hdr->doff);
+	printf(" cwr %u",hdr->cwr);
+	printf(" ece %u",hdr->cwr);
+	printf(" urg %u",hdr->cwr);
+	printf(" ack %u",hdr->cwr);
+	printf(" psh %u",hdr->cwr);
+	printf(" rst %u",hdr->cwr);
+	printf(" syn %u",hdr->cwr);
+	printf(" fin %u",hdr->cwr);
+	printf(" window %u",hdr->window);
+	printf(" check %u",hdr->check);
+	printf(" urgptr %u",hdr->urg_ptr);
+	printf(" option ");
+	u_char i=20;
+	for(i;i<hdr->doff*4;i++){
+		printf("%x",hdr->option[i]);
+	}
+
 }
 
 /**
@@ -225,24 +279,24 @@ void display_ipv4_hdr(ipv4_hdr *hdr)
 	u_int8 option_len = hdr->ihl - 5;
 	u_int16 tmp = htons(hdr->frag_off);
 
-	printf("ver %d ",hdr->ver);
-	printf("hdl %d ",hdr->ihl);
-	printf("tos 0x%x ",hdr->tos);
-	printf("tot len %d ",htons(hdr->tot_len));
-	printf("id %d ",htons(hdr->id));
-	printf("flag 0x%x ",tmp>>13);
-	printf("frag off %d*4 ",tmp&0x1fff);
-	printf("ttl %d ",hdr->ttl);
-	printf("procol 0x%x ",hdr->procol);
-	printf("check 0x%x ",hdr->check);
-	printf("saddr ");
+	printf("ver %d",hdr->ver);
+	printf(" hdl %d",hdr->ihl);
+	printf(" tos 0x%x",hdr->tos);
+	printf(" totlen %d",htons(hdr->tot_len));
+	printf(" id %d",htons(hdr->id));
+	printf(" flag 0x%x",tmp>>13);
+	printf(" fragoff %d*4",tmp&0x1fff);
+	printf(" ttl %d",hdr->ttl);
+	printf(" procol 0x%x",hdr->procol);
+	printf(" check 0x%x",hdr->check);
+	printf(" saddr ");
 	display_ipv4_addr(&(hdr->saddr));
 	printf(" daddr ");
 	display_ipv4_addr(&(hdr->daddr));
 	
 	printf(" option ");
 	u_int16 i=0;
-	for(i; i<option_len * 4; i++)
+	for(i; i<option_len*4; i++)
 	{
 		printf("%x",hdr->option[i]);
 	}
@@ -315,4 +369,53 @@ void parse_net(net_info *netinfo/**<[in]ÍøÂç²ã±¨ÎÄĞÅÏ¢*/, tran_info *traninfo/**
 	}
 	return ;
 }
+
+/**
+ * @brief ½âÎö´«Êä²ãÊı¾İ
+ *
+ * @param traninfo ´«ÈëµÄ´«Êä²ãĞÅÏ¢
+ * @param appinfo  ´«³öµÄÓ¦ÓÃ²ãĞÅÏ¢
+ */
+void parse_tran(tran_info *traninfo/**<[in] ´«Êä²ã±¨ÎÄĞÅÏ¢*/, app_info *appinfo/**<[out] ½âÎö³öµÄÓ¦ÓÃ²ã±¨ÎÄĞÅÏ¢*/)
+{
+	assert(traninfo != NULL);
+	assert(appinfo != NULL);
+
+	appinfo->data = NULL;
+	appinfo->type = APP_INVALID;
+	appinfo->size = 0;
+
+	switch (traninfo->type)
+	{
+		case TCP :
+			parse_tcp(traninfo->size, traninfo->data,appinfo);
+			break;
+		case UDP :
+			break;
+		default :
+			break;
+	}
+
+	return ;
+}
+
+/**
+ * @brief ½âÎö´«Êä²ãtcpÊı¾İ
+ *
+ * @param size ´«Êä²ãtcpÊı¾İ°üµÄ´óĞ¡ 
+ * @param data ´«Êä²ãtcpÊı¾İ°üµÄ¿ªÊ¼Î»ÖÃ
+ * @param info ´Ó´«Êä²ãtcpÊı¾İ°üÖĞ½âÎö³öµÄÓ¦ÓÃ²ãĞÅÏ¢
+ */
+void parse_tcp(u_int16 size, u_char *data, app_info *info)
+{
+	assert(size != 0);
+	assert(data != NULL);
+	assert(info != NULL);
+
+	tcp_hdr *hdr = (tcp_hdr*)data;
+	display_tcp_hdr(hdr);
+	
+	return ;
+}
+
 
