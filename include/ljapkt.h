@@ -129,6 +129,16 @@ typedef struct{
 }tcp_hdr;
 
 /**
+ * @brief UDP报头
+ */
+typedef struct{
+	u_int16 source;   //!源端口
+	u_int16 dest;     //!目的端口
+	u_int16 len;      //!整个upd报文的长度
+	u_int16 check;    //!校验码
+}udp_hdr;
+
+/**
  * @brief 从数据链路层解析出的网络层信息 
  */
 typedef struct{
@@ -183,6 +193,13 @@ void display_ipv4_addr(u_int32 *addr);
 void display_tcp_hdr(tcp_hdr *hdr);
 
 /**
+ * @brief 打印udp报头信息
+ *
+ * @param hdr udp_hdr*
+ */
+void display_udp_hdr(udp_hdr *hdr);
+
+/**
  * @brief 解析链路层数据包。
  *
  * @param size  链路层数据包大小
@@ -235,4 +252,12 @@ void parse_tran(tran_info *traninfo/**<[in] 传输层报文信息*/, app_info *a
  */
 void parse_tcp(u_int16 size, u_char *data, app_info *info);
 
+/**
+ * @brief 解析传输层udp数据
+ *
+ * @param size 传输层udp数据包的大小 
+ * @param data 传输层udp数据包的开始位置
+ * @param info 从传输层udp数据包中解析出的应用层信息
+ */
+void parse_udp(u_int16 size, u_char *data, app_info *info);
 #endif

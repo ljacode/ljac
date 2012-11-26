@@ -239,43 +239,14 @@ void parse_ipv4(u_int16 size, u_char *data, tran_info *info/**<[out] ½âÎö³ö±¨ÎÄµ
 }
 
 /**
- * @brief ´òÓ¡tcp±¨Í·ĞÅÏ¢
- *
- * @param hdr tcp_hdr*
- */
-void display_tcp_hdr(tcp_hdr *hdr)
-{
-	printf("source %u",hdr->source);
-	printf(" dest %u",hdr->dest);
-	printf(" seq %u",hdr->seq);
-	printf(" ackseq %u",hdr->ack_seq);
-	printf(" doff %u",hdr->doff);
-	printf(" cwr %u",hdr->cwr);
-	printf(" ece %u",hdr->cwr);
-	printf(" urg %u",hdr->cwr);
-	printf(" ack %u",hdr->cwr);
-	printf(" psh %u",hdr->cwr);
-	printf(" rst %u",hdr->cwr);
-	printf(" syn %u",hdr->cwr);
-	printf(" fin %u",hdr->cwr);
-	printf(" window %u",hdr->window);
-	printf(" check %u",hdr->check);
-	printf(" urgptr %u",hdr->urg_ptr);
-	printf(" option ");
-	u_char i=20;
-	for(i;i<hdr->doff*4;i++){
-		printf("%x",hdr->option[i]);
-	}
-
-}
-
-/**
  * @brief ´òÓ¡ipv4±¨Í·ĞÅÏ¢
  *
  * @param hdr ipv4_hdr*
  */
 void display_ipv4_hdr(ipv4_hdr *hdr)
 {
+	assert(hdr != NULL);
+
 	u_int8 option_len = hdr->ihl - 5;
 	u_int16 tmp = htons(hdr->frag_off);
 
@@ -324,6 +295,52 @@ void display_ipv4_addr(u_int32 *addr)
 	printf("%d",p[i]);
 	
 	return ;
+}
+
+/**
+ * @brief ´òÓ¡tcp±¨Í·ĞÅÏ¢
+ *
+ * @param hdr tcp_hdr*
+ */
+void display_tcp_hdr(tcp_hdr *hdr)
+{
+	assert(hdr != NULL);
+
+	printf("source %u",hdr->source);
+	printf(" dest %u",hdr->dest);
+	printf(" seq %u",hdr->seq);
+	printf(" ackseq %u",hdr->ack_seq);
+	printf(" doff %u",hdr->doff);
+	printf(" cwr %u",hdr->cwr);
+	printf(" ece %u",hdr->cwr);
+	printf(" urg %u",hdr->cwr);
+	printf(" ack %u",hdr->cwr);
+	printf(" psh %u",hdr->cwr);
+	printf(" rst %u",hdr->cwr);
+	printf(" syn %u",hdr->cwr);
+	printf(" fin %u",hdr->cwr);
+	printf(" window %u",hdr->window);
+	printf(" check %u",hdr->check);
+	printf(" urgptr %u",hdr->urg_ptr);
+	printf(" option ");
+	u_char i=20;
+	for(i;i<hdr->doff*4;i++){
+		printf("%x",hdr->option[i]);
+	}
+}
+
+/**
+ * @brief ´òÓ¡udp±¨Í·ĞÅÏ¢
+ *
+ * @param hdr udp_hdr*
+ */
+void display_udp_hdr(udp_hdr *hdr)
+{
+	assert(hdr != NULL);
+	printf("source %u",hdr->source);
+	printf(" dest %u",hdr->dest);
+	printf(" len %u",hdr->len);
+	printf(" check %u",hdr->check);
 }
 
 /**
@@ -391,6 +408,7 @@ void parse_tran(tran_info *traninfo/**<[in] ´«Êä²ã±¨ÎÄĞÅÏ¢*/, app_info *appinfo/
 			parse_tcp(traninfo->size, traninfo->data,appinfo);
 			break;
 		case UDP :
+			parse_udp(traninfo->size, traninfo->data,appinfo);
 			break;
 		default :
 			break;
@@ -414,8 +432,54 @@ void parse_tcp(u_int16 size, u_char *data, app_info *info)
 
 	tcp_hdr *hdr = (tcp_hdr*)data;
 	display_tcp_hdr(hdr);
+
+	info->data = NULL;
+	info->type = APP_INVALID;
+	info->size = 0;
+
+	info->data = data + hdr->doff*4;
+	info->size = size - hdr->doff*4;
+
+	/*
+		TODO: »ñÈ¡Ó¦ÓÃ²ãµÄĞ­ÒéÀàĞÍ
+		·½°¸1: ¸ú¾İ¶Ë¿ÚÅĞ¶Ï
+		·½°¸2: É¨Ãè±¨ÎÄÄÚÈİ
+		·½°¸3: ½¨Á¢×´Ì¬»ú
+	*/
 	
 	return ;
 }
 
+/**
+ * @brief ½âÎö´«Êä²ãudpÊı¾İ
+ *
+ * @param size ´«Êä²ãudpÊı¾İ°üµÄ´óĞ¡ 
+ * @param data ´«Êä²ãudpÊı¾İ°üµÄ¿ªÊ¼Î»ÖÃ
+ * @param info ´Ó´«Êä²ãudpÊı¾İ°üÖĞ½âÎö³öµÄÓ¦ÓÃ²ãĞÅÏ¢
+ */
+void parse_udp(u_int16 size, u_char *data, app_info *info)
+{
+	assert(size != 0);
+	assert(data != NULL);
+	assert(info != NULL);
+
+	udp_hdr *hdr=(udp_hdr*)data;
+	display_udp_hdr(hdr);
+
+	info->data = NULL;
+	info->type = APP_INVALID;
+	info->size = 0;
+
+	info->data = data + 8;
+	info->size = hdr->len;
+
+	/*
+		TODO: »ñÈ¡Ó¦ÓÃ²ãµÄĞ­ÒéÀàĞÍ
+		·½°¸1: ¸ú¾İ¶Ë¿ÚÅĞ¶Ï
+		·½°¸2: É¨Ãè±¨ÎÄÄÚÈİ
+		·½°¸3: ½¨Á¢×´Ì¬»ú
+	*/
+
+	return ;
+}
 
