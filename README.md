@@ -18,3 +18,5 @@ ljatype.h  ×î»ù±¾Êý¾ÝÀàÐÍµÄ·â×°£¬ÔÚljacÖÐÈ«²¿Ê¹ÓÃÕâÀï¶¨ÒåµÄ»ù±¾Êý¾ÝÀàÐÍ£¨µÚÈý·½¿
 
 ljapcap.[hc]  ¶ÔpcapµÄÒ»Ð©¼òµ¥·â×°£¬ÒÀÀµpcap¿â
 
+ljabits.[hc] °´Î»²Ù×÷
+

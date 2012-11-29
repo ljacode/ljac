@@ -54,7 +54,7 @@ TARGET_DIR = lib
 #    如果$(EXPORT_HEAD)为空，$(EXPORT_HEAD_DIR)为空，不做操作
 #    如果$(EXPORT HEAD_DIR)中有多个目录，头文件被复制到其中的每一个目录下
 #    EXPORT_HEAD和EXPORT_HEAD_DIR将被排序去重
-EXPORT_HEAD = ljapcap.h ljapkt.h ljatype.h ljaplatform.h
+EXPORT_HEAD = ljapcap.h ljapkt.h ljatype.h ljaplatform.h ljabits.h
 EXPORT_HEAD_DIR = include
 
 #编译选项
